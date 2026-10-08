@@ -24,9 +24,7 @@ import {
   QueryScanConsistency,
 } from './querytypes.js'
 import * as http from 'node:http'
-import stream_json from 'stream-json'
-const { parser } = stream_json
-import type { Parser } from 'stream-json'
+import { parserStream } from 'stream-json'
 import { pipeline } from 'node:stream'
 import { runWithRetry } from './retries.js'
 import { OperationalInsightsError } from './errors.js'
@@ -227,7 +225,7 @@ export class QueryExecutor {
       return this._handleNonSuccessfulStatusCode(res, reject)
     }
 
-    const jsonTokenizer: Parser = parser()
+    const jsonTokenizer = parserStream()
     const jsonTokenParser = new JsonTokenParserStream()
     const effectiveDeserializer = deserializer ?? this._deserializer
     const queryStream = new QueryResultStream(
