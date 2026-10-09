@@ -121,10 +121,13 @@ export class QueryExecutor {
     const body = JSON.stringify(encodedOptions)
 
     return await runWithRetry(
-      async () => {
+      async (attemptSignal) => {
         // Rebuild per attempt so a credential rotated mid-query takes effect
         // on the next retry, and so each attempt re-selects an A/AAAA record.
         const generic = await this._cluster.httpClient.requestOptions()
+        // The attempt may have timed out while the host was being resolved;
+        // an aborted signal never fires its listener, so check it here.
+        attemptSignal.throwIfAborted()
         const requestOptions: http.RequestOptions = {
           ...generic,
           method: 'POST',
@@ -135,7 +138,12 @@ export class QueryExecutor {
             'Content-Type': 'application/json',
           },
         }
-        return this._attemptQuery(requestOptions, body, deadline)
+        return this._attemptQuery(
+          requestOptions,
+          body,
+          deadline,
+          this._attemptSignal(attemptSignal)
+        )
       },
       (errs) => ErrorHandler.handleErrors(errs, this._requestContext),
       deadline,
@@ -151,15 +159,16 @@ export class QueryExecutor {
   private async _attemptQuery(
     requestOptions: http.RequestOptions,
     body: string,
-    deadline: number
+    deadline: number,
+    signal: AbortSignal
   ): Promise<QueryResult> {
     return new Promise((resolve, reject) => {
       const abortHandler = () => {
         req.destroy()
-        return reject(this._signal.reason)
+        return reject(signal.reason)
       }
 
-      this._signal.addEventListener('abort', abortHandler)
+      signal.addEventListener('abort', abortHandler)
 
       const req = this._cluster.httpClient.module.request(
         requestOptions,
@@ -172,7 +181,7 @@ export class QueryExecutor {
       )
 
       req.once('close', () => {
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
       })
 
       req.on('error', (err) => {
@@ -180,7 +189,7 @@ export class QueryExecutor {
           `Error occurred while sending query request to ${requestOptions.host}:${requestOptions.port}, details: ${err.message}. clientContextId=${this._clientContextId}`
         )
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new ConnectionError(err, true))
       })
 
@@ -189,7 +198,7 @@ export class QueryExecutor {
           `Connection timeout for query request to ${requestOptions.host}:${requestOptions.port}. clientContextId=${this._clientContextId}`
         )
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new InternalConnectionTimeout())
       })
 
@@ -400,6 +409,22 @@ export class QueryExecutor {
     }
 
     return opts as BuiltQueryRequest
+  }
+
+  /**
+   * Combines the executor's signal with the signal for a single attempt,
+   * which `runWithRetry` aborts when the attempt times out.
+   *
+   * @internal
+   */
+  protected _attemptSignal(attemptSignal: AbortSignal): AbortSignal {
+    // An aborted signal never fires again, so combining it would hide the
+    // attempt timeout. A QueryResultHandle still sends requests after
+    // QueryResult.cancel(), and those need the timeout to close the socket.
+    if (this._signal.aborted) {
+      return attemptSignal
+    }
+    return AbortSignal.any([this._signal, attemptSignal])
   }
 
   /**
