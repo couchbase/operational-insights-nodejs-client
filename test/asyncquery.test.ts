@@ -385,9 +385,9 @@ function genericAsyncTests(instance: () => Cluster | Scope) {
 }
 
 describe('#Operational Insights async query - cluster', function () {
-  genericAsyncTests(() => harness.c)
+  genericAsyncTests(() => harness.c!)
 })
 
 describe('#Operational Insights async query - scope', function () {
-  genericAsyncTests(() => harness.s)
+  genericAsyncTests(() => harness.s!)
 })

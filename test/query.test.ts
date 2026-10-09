@@ -328,9 +328,9 @@ function genericTests(instance: () => Cluster | Scope) {
 }
 
 describe('#Operational Insights query - cluster', function () {
-  genericTests(() => harness.c)
+  genericTests(() => harness.c!)
 })
 
 describe('#Operational Insights query - scope', function () {
-  genericTests(() => harness.s)
+  genericTests(() => harness.s!)
 })

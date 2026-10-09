@@ -138,6 +138,7 @@ jobs:
           cp package.json ncboi-test
           cp package-lock.json ncboi-test
           cp tsconfig.json ncboi-test
+          cp tsup.config.mjs ncboi-test
       - name: Build testConfig.ini
         run: |
           cat > testConfig.ini <<EOF

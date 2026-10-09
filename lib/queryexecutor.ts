@@ -221,7 +221,7 @@ export class QueryExecutor {
 
     this._requestContext.updateGenericResContextFields(res)
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
+    if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
       return this._handleNonSuccessfulStatusCode(res, reject)
     }
 
@@ -299,7 +299,7 @@ export class QueryExecutor {
     let raw = ''
     res.on('data', (chunk) => (raw += chunk))
     res.on('end', () => {
-      let parsed: any = null
+      let parsed: any
       try {
         parsed = JSON.parse(raw)
       } catch (_e) {

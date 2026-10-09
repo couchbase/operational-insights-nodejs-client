@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { sendUnaryData } from '@grpc/grpc-js'
 import { SdkCommandQueryOptions } from '../options/queryOptions'
 import { PerformerError } from '../errors'
@@ -30,7 +30,7 @@ export class Query implements RegisteredQuery {
   private _abortController: AbortController | undefined
 
   constructor(req: ExecuteQueryRequestPb, conn: Cluster) {
-    this._handle = uuidv4()
+    this._handle = randomUUID()
     this._statement = req.getStatement()
     this._options = SdkCommandQueryOptions.toSdkQueryOptions(req.getOptions())
     if (req.getRequireCancellation()) {
