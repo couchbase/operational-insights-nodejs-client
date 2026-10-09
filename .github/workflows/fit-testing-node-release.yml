@@ -30,7 +30,7 @@ jobs:
   fit:
     uses: couchbaselabs/fit-cli/.github/workflows/fit-cli.yaml@main
     with:
-      preset: ${{ vars.FIT_CLI_PRESET || inputs.preset || 'insights-multi-release' }}
+      preset: ${{ inputs.preset || vars.FIT_CLI_RELEASE_PRESET || 'insights-multi-release' }}
       collect_extra_diagnostics: ${{ inputs.collect_extra_diagnostics == '' && true || inputs.collect_extra_diagnostics }}
       performer: 'insights-node-fit-performer:main'
-      channel: ${{ vars.FIT_CLI_CHANNEL || inputs.channel }}
+      channel: ${{ inputs.channel || vars.FIT_CLI_CHANNEL }}
