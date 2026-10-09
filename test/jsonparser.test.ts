@@ -15,8 +15,7 @@
  *  limitations under the License.
  */
 
-import pkg from 'stream-json'
-const { parser } = pkg
+import { parserStream } from 'stream-json'
 import { pipeline, Readable } from 'node:stream'
 import { assert } from 'chai'
 import { harness } from './harness.js'
@@ -46,7 +45,7 @@ describe('JsonTokenParserStream', function () {
         resolve({ rows, errorsItems, stack: jsonParser.stack.pop() })
       })
 
-      pipeline(Readable.from([jsonString]), parser(), jsonParser, (err) => {
+      pipeline(Readable.from([jsonString]), parserStream(), jsonParser, (err) => {
         if (err) {
           reject(err)
         }

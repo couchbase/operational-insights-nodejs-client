@@ -4,7 +4,7 @@
   },
   "description": "The official Couchbase Node.js Operational Insights Client Library.",
   "engines": {
-    "node": ">=16"
+    "node": ">=22.12"
   },
   "homepage": "https://www.couchbase.com/developers/sdks",
   "keywords": [
@@ -33,7 +33,7 @@
   "license": "Apache-2.0",
   "name": "couchbase-operational-insights",
   "dependencies": {
-    "stream-json": "^1.9.1"
+    "stream-json": "^3.7.0"
   },
   "overrides": {
     "diff": "^9.0.0",
@@ -49,7 +49,6 @@
     "@types/debug": "^4.1.13",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.14.5",
-    "@types/stream-json": "^1.7.8",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "chai": "^6.2.2",
