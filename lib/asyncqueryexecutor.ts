@@ -79,8 +79,9 @@ export class AsyncQueryExecutor extends QueryExecutor {
     const body = JSON.stringify(encodedOptions)
 
     return await runWithRetry(
-      async () => {
+      async (attemptSignal) => {
         const generic = await this._cluster.httpClient.requestOptions()
+        attemptSignal.throwIfAborted()
         const requestOptions: http.RequestOptions = {
           ...generic,
           method: 'POST',
@@ -91,7 +92,11 @@ export class AsyncQueryExecutor extends QueryExecutor {
             'Content-Type': 'application/json',
           },
         }
-        return this._attemptStartQuery(requestOptions, body)
+        return this._attemptStartQuery(
+          requestOptions,
+          body,
+          this._attemptSignal(attemptSignal)
+        )
       },
       (errs) => ErrorHandler.handleErrors(errs, this._requestContext),
       deadline,
@@ -108,15 +113,19 @@ export class AsyncQueryExecutor extends QueryExecutor {
     this._requestContext.setGenericRequestContextFields('', statusHandle, 'GET')
 
     return await runWithRetry(
-      async () => {
+      async (attemptSignal) => {
         const generic = await this._cluster.httpClient.requestOptions()
+        attemptSignal.throwIfAborted()
         const requestOptions: http.RequestOptions = {
           ...generic,
           method: 'GET',
           path: statusHandle,
           headers: { ...generic.headers, 'Content-Type': 'application/json' },
         }
-        return this._attemptJsonRequest(requestOptions)
+        return this._attemptJsonRequest(
+          requestOptions,
+          this._attemptSignal(attemptSignal)
+        )
       },
       (errs) => ErrorHandler.handleErrors(errs, this._requestContext),
       deadline,
@@ -136,8 +145,9 @@ export class AsyncQueryExecutor extends QueryExecutor {
     const body = `request_id=${encodeURIComponent(requestId)}`
 
     return await runWithRetry(
-      async () => {
+      async (attemptSignal) => {
         const generic = await this._cluster.httpClient.requestOptions()
+        attemptSignal.throwIfAborted()
         const requestOptions: http.RequestOptions = {
           ...generic,
           method: 'DELETE',
@@ -148,7 +158,11 @@ export class AsyncQueryExecutor extends QueryExecutor {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
         }
-        return this._attemptCancelQuery(requestOptions, body)
+        return this._attemptCancelQuery(
+          requestOptions,
+          body,
+          this._attemptSignal(attemptSignal)
+        )
       },
       (errs) => ErrorHandler.handleErrors(errs, this._requestContext),
       deadline,
@@ -168,15 +182,21 @@ export class AsyncQueryExecutor extends QueryExecutor {
     this._requestContext.setGenericRequestContextFields('', resultHandle, 'GET')
 
     return await runWithRetry(
-      async () => {
+      async (attemptSignal) => {
         const generic = await this._cluster.httpClient.requestOptions()
+        attemptSignal.throwIfAborted()
         const requestOptions: http.RequestOptions = {
           ...generic,
           method: 'GET',
           path: resultHandle,
           headers: { ...generic.headers, 'Content-Type': 'application/json' },
         }
-        return this._attemptFetchResults(requestOptions, deadline, deserializer)
+        return this._attemptFetchResults(
+          requestOptions,
+          deadline,
+          this._attemptSignal(attemptSignal),
+          deserializer
+        )
       },
       (errs) => ErrorHandler.handleErrors(errs, this._requestContext),
       deadline,
@@ -197,15 +217,19 @@ export class AsyncQueryExecutor extends QueryExecutor {
     )
 
     return await runWithRetry(
-      async () => {
+      async (attemptSignal) => {
         const generic = await this._cluster.httpClient.requestOptions()
+        attemptSignal.throwIfAborted()
         const requestOptions: http.RequestOptions = {
           ...generic,
           method: 'DELETE',
           path: resultHandle,
           headers: { ...generic.headers, 'Content-Type': 'application/json' },
         }
-        return this._attemptDiscardResults(requestOptions)
+        return this._attemptDiscardResults(
+          requestOptions,
+          this._attemptSignal(attemptSignal)
+        )
       },
       (errs) => ErrorHandler.handleErrors(errs, this._requestContext),
       deadline,
@@ -215,14 +239,15 @@ export class AsyncQueryExecutor extends QueryExecutor {
 
   private _attemptStartQuery(
     requestOptions: http.RequestOptions,
-    body: string
+    body: string,
+    signal: AbortSignal
   ): Promise<StartQueryResponse> {
     return new Promise((resolve, reject) => {
       const abortHandler = () => {
         req.destroy()
-        return reject(this._signal.reason)
+        return reject(signal.reason)
       }
-      this._signal.addEventListener('abort', abortHandler)
+      signal.addEventListener('abort', abortHandler)
 
       const req = this._cluster.httpClient.module.request(
         requestOptions,
@@ -234,16 +259,14 @@ export class AsyncQueryExecutor extends QueryExecutor {
         }
       )
 
-      req.once('close', () =>
-        this._signal.removeEventListener('abort', abortHandler)
-      )
+      req.once('close', () => signal.removeEventListener('abort', abortHandler))
 
       req.on('error', (err) => {
         CouchbaseLogger.error(
           `Error sending startQuery request to ${requestOptions.host}:${requestOptions.port}, details: ${err.message}. clientContextId=${this._clientContextId}`
         )
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new ConnectionError(err, true))
       })
 
@@ -252,7 +275,7 @@ export class AsyncQueryExecutor extends QueryExecutor {
           `Connection timeout for startQuery request to ${requestOptions.host}:${requestOptions.port}. clientContextId=${this._clientContextId}`
         )
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new InternalConnectionTimeout())
       })
 
@@ -279,14 +302,15 @@ export class AsyncQueryExecutor extends QueryExecutor {
   }
 
   private _attemptJsonRequest(
-    requestOptions: http.RequestOptions
+    requestOptions: http.RequestOptions,
+    signal: AbortSignal
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       const abortHandler = () => {
         req.destroy()
-        return reject(this._signal.reason)
+        return reject(signal.reason)
       }
-      this._signal.addEventListener('abort', abortHandler)
+      signal.addEventListener('abort', abortHandler)
 
       const req = this._cluster.httpClient.module.request(
         requestOptions,
@@ -298,22 +322,20 @@ export class AsyncQueryExecutor extends QueryExecutor {
         }
       )
 
-      req.once('close', () =>
-        this._signal.removeEventListener('abort', abortHandler)
-      )
+      req.once('close', () => signal.removeEventListener('abort', abortHandler))
 
       req.on('error', (err) => {
         CouchbaseLogger.error(
           `Error sending request to ${requestOptions.host}:${requestOptions.port}${requestOptions.path}, details: ${err.message}. clientContextId=${this._clientContextId}`
         )
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new ConnectionError(err, true))
       })
 
       req.on('connectTimeout', () => {
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new InternalConnectionTimeout())
       })
 
@@ -324,14 +346,15 @@ export class AsyncQueryExecutor extends QueryExecutor {
 
   private _attemptCancelQuery(
     requestOptions: http.RequestOptions,
-    body: string
+    body: string,
+    signal: AbortSignal
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const abortHandler = () => {
         req.destroy()
-        return reject(this._signal.reason)
+        return reject(signal.reason)
       }
-      this._signal.addEventListener('abort', abortHandler)
+      signal.addEventListener('abort', abortHandler)
 
       const req = this._cluster.httpClient.module.request(
         requestOptions,
@@ -343,19 +366,17 @@ export class AsyncQueryExecutor extends QueryExecutor {
         }
       )
 
-      req.once('close', () =>
-        this._signal.removeEventListener('abort', abortHandler)
-      )
+      req.once('close', () => signal.removeEventListener('abort', abortHandler))
 
       req.on('error', (err) => {
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new ConnectionError(err, true))
       })
 
       req.on('connectTimeout', () => {
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new InternalConnectionTimeout())
       })
 
@@ -368,14 +389,15 @@ export class AsyncQueryExecutor extends QueryExecutor {
   private _attemptFetchResults(
     requestOptions: http.RequestOptions,
     deadline: number,
+    signal: AbortSignal,
     deserializer?: Deserializer
   ): Promise<QueryResult> {
     return new Promise((resolve, reject) => {
       const abortHandler = () => {
         req.destroy()
-        return reject(this._signal.reason)
+        return reject(signal.reason)
       }
-      this._signal.addEventListener('abort', abortHandler)
+      signal.addEventListener('abort', abortHandler)
 
       const req = this._cluster.httpClient.module.request(
         requestOptions,
@@ -393,19 +415,17 @@ export class AsyncQueryExecutor extends QueryExecutor {
         }
       )
 
-      req.once('close', () =>
-        this._signal.removeEventListener('abort', abortHandler)
-      )
+      req.once('close', () => signal.removeEventListener('abort', abortHandler))
 
       req.on('error', (err) => {
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new ConnectionError(err, true))
       })
 
       req.on('connectTimeout', () => {
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new InternalConnectionTimeout())
       })
 
@@ -415,14 +435,15 @@ export class AsyncQueryExecutor extends QueryExecutor {
   }
 
   private _attemptDiscardResults(
-    requestOptions: http.RequestOptions
+    requestOptions: http.RequestOptions,
+    signal: AbortSignal
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const abortHandler = () => {
         req.destroy()
-        return reject(this._signal.reason)
+        return reject(signal.reason)
       }
-      this._signal.addEventListener('abort', abortHandler)
+      signal.addEventListener('abort', abortHandler)
 
       const req = this._cluster.httpClient.module.request(
         requestOptions,
@@ -434,19 +455,17 @@ export class AsyncQueryExecutor extends QueryExecutor {
         }
       )
 
-      req.once('close', () =>
-        this._signal.removeEventListener('abort', abortHandler)
-      )
+      req.once('close', () => signal.removeEventListener('abort', abortHandler))
 
       req.on('error', (err) => {
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new ConnectionError(err, true))
       })
 
       req.on('connectTimeout', () => {
         req.destroy()
-        this._signal.removeEventListener('abort', abortHandler)
+        signal.removeEventListener('abort', abortHandler)
         reject(new InternalConnectionTimeout())
       })
 

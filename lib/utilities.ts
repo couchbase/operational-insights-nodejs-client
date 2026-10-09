@@ -35,15 +35,20 @@ export class PromiseHelper {
    *
    * @param promise The promise to run.
    * @param ms The timeout in milliseconds.
+   * @param onTimeout Called when the timeout fires, to cancel the work behind
+   *   the promise.
    */
   static async promiseWithTimeout<T>(
     promise: Promise<T>,
-    ms: number
+    ms: number,
+    onTimeout?: (err: TimeoutError) => void
   ): Promise<T> {
     let timeoutId
     const timeout = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
-        reject(new TimeoutError(`Operation timed out after ${ms}ms`))
+        const err = new TimeoutError(`Operation timed out after ${ms}ms`)
+        reject(err)
+        onTimeout?.(err)
       }, ms)
     })
 
