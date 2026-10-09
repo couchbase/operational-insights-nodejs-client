@@ -70,7 +70,7 @@ import {
   PassthroughDeserializer,
   FetchResultsOptions,
 } from 'couchbase-operational-insights'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { SdkCommandQueryOptions } from './options/queryOptions'
 import { Deserializer as DeserializerPb } from '../proto/columnar.serialization_pb'
 import { ResponseMetadata } from '../proto/columnar.metadata_pb'
@@ -274,7 +274,7 @@ class ColumnarCrossService {
       queryTarget
         .startQuery(statement, opts)
         .then((queryHandle) => {
-          const handleId = uuidv4()
+          const handleId = randomUUID()
           const asyncQuery = new AsyncQuery(queryHandle)
           registry.query.registerQuery(handleId, asyncQuery)
           callback(null, response.setQueryHandle(handleId))

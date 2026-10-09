@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { sendUnaryData } from '@grpc/grpc-js'
 import { Readable } from 'node:stream'
 import { ErrorUtils, PerformerError } from '../errors'
@@ -21,7 +21,7 @@ export class QueryResultIterator implements RegisteredQuery {
   private _hasPendingRowRequest = false
 
   constructor(result: QueryResult, handle?: string) {
-    this._handle = handle ?? uuidv4()
+    this._handle = handle ?? randomUUID()
     this._result = result
     this._stream = result.rows()
     this._stream.pause()

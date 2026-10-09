@@ -22,11 +22,12 @@
  * @category Error Handling
  */
 export class OperationalInsightsError extends Error {
-  cause: Error
+  cause?: Error
 
   constructor(message: string, cause?: Error) {
-    super(message, cause)
+    super(message)
     this.name = this.constructor.name
+    this.cause = cause
   }
 }
 

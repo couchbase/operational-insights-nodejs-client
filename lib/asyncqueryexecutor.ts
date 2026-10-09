@@ -474,7 +474,7 @@ export class AsyncQueryExecutor extends QueryExecutor {
 
     this._requestContext.updateGenericResContextFields(res)
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
+    if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
       return this._handleNonSuccessfulStatusCode(res, reject)
     }
 
@@ -555,7 +555,7 @@ export class AsyncQueryExecutor extends QueryExecutor {
       return resolve()
     }
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
+    if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
       return this._handleNonSuccessfulStatusCode(res, reject)
     }
 

@@ -55,7 +55,7 @@ export class HttpStatusError extends Error {
  */
 export class ConnectionError extends Error {
   private request: boolean
-  cause?: Error
+  cause: Error
 
   constructor(err: Error, request: boolean) {
     super(`ConnectionError: ${err.message}`)
