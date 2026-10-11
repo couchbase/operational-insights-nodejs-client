@@ -220,4 +220,5 @@ export class CertificateCredential {
  *
  * @category Authentication
  */
-export type ClusterCredential = Credential | JwtCredential | CertificateCredential
+export type ClusterCredential =
+  Credential | JwtCredential | CertificateCredential

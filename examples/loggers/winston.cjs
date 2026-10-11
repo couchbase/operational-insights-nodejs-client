@@ -20,7 +20,10 @@ const winston = require('winston')
 
 const winstonLogger = winston.createLogger({
   level: 'debug',
-  transports: [new winston.transports.Console(), new winston.transports.File({filename: 'operational-insights.log'})],
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: 'operational-insights.log' }),
+  ],
 })
 
 const couchbaseLogger = {
@@ -38,9 +41,13 @@ async function main() {
   // User Input ends here.
 
   const credential = new operationalInsights.Credential(username, password)
-  const cluster = operationalInsights.createInstance(clusterConnStr, credential, {
-    logger: couchbaseLogger,
-  })
+  const cluster = operationalInsights.createInstance(
+    clusterConnStr,
+    credential,
+    {
+      logger: couchbaseLogger,
+    }
+  )
 
   // ... Execute operations here
 }

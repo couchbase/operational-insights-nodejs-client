@@ -113,7 +113,7 @@ const TEST_CONFIG: TestConfig = {
 let configIni: any
 try {
   configIni = ini.parse(fs.readFileSync(TEST_CONFIG_INI, 'utf-8'))
-} catch (e) {
+} catch {
   // config.ini is optional
 }
 
@@ -327,7 +327,7 @@ class Harness {
     try {
       await this.maybeCreateDatabase(scope.database)
       const qs = `CREATE SCOPE \`${scope.database.name}\`.\`${scope.name}\` IF NOT EXISTS`
-      let res = await scope.database.cluster.executeQuery(qs)
+      const res = await scope.database.cluster.executeQuery(qs)
       for await (const _ of res.rows()) {
         // do nothing
       }
@@ -339,7 +339,7 @@ class Harness {
   async maybeCreateDatabase(database: Database): Promise<void> {
     if (database.name !== 'Default') {
       const qs = `CREATE DATABASE \`${database.name}\` IF NOT EXISTS`
-      let res = await database.cluster.executeQuery(qs)
+      const res = await database.cluster.executeQuery(qs)
       for await (const _ of res.rows()) {
         // do nothing
       }

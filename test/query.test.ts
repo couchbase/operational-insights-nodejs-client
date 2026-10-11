@@ -72,7 +72,7 @@ function genericTests(instance: () => Cluster | Scope) {
       let result: { rows: any[]; meta: QueryMetadata } | undefined
       try {
         result = await eventStreamQuery(qRes)
-      } catch (err) {} // eslint-disable-line no-empty
+      } catch {} // eslint-disable-line no-empty
       assert.equal(result!.rows.length, 100)
       assert.instanceOf(result!.meta, QueryMetadata)
     })
