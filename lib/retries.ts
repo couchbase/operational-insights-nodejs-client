@@ -69,13 +69,15 @@ export class RequestBehaviour {
  *
  * Helper function that runs a function with retry logic based on the provided evaluation function.
  *
- * @param fn The function to execute, which returns a Promise.
+ * @param fn The function to execute, which returns a Promise. It receives a
+ *   signal that is aborted when the attempt times out, and must stop its
+ *   request when that happens.
  * @param evaluate A function that evaluates the error and returns a RequestBehaviour indicating whether to retry or fail.
  * @param deadline The deadline timestamp by which the operation must complete.
  * @param requestContext The context for the request, used for error messages.
  */
 export async function runWithRetry<T>(
-  fn: () => Promise<T>,
+  fn: (attemptSignal: AbortSignal) => Promise<T>,
   evaluate: (errs: any) => RequestBehaviour,
   deadline: number,
   requestContext: RequestContext
@@ -95,14 +97,19 @@ export async function runWithRetry<T>(
       )
     }
 
+    const attemptController = new AbortController()
     try {
       requestContext.incrementAttempt()
-      return await PromiseHelper.promiseWithTimeout(fn(), remainingTime)
+      return await PromiseHelper.promiseWithTimeout(
+        fn(attemptController.signal),
+        remainingTime,
+        (err) => attemptController.abort(err)
+      )
     } catch (err) {
       // TimeoutError from promiseWithTimeout is handled separately
       if (err instanceof TimeoutError) {
         requestContext.addPreviousAttemptErrorToContext(lastErr)
-        throw err
+        throw new TimeoutError(requestContext.attachErrorContext(err.message))
       }
 
       const behaviour = evaluate(err)
