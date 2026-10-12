@@ -40,7 +40,11 @@ export * from './database.js'
 export * from './deserializers.js'
 export * from './certificates.js'
 export * from './cluster.js'
-export { CertificateCredential, Credential, JwtCredential } from './credential.js'
+export {
+  CertificateCredential,
+  Credential,
+  JwtCredential,
+} from './credential.js'
 export type { ClusterCredential, ICredential } from './credential.js'
 export * from './errors.js'
 export * from './scope.js'

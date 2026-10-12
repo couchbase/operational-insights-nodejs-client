@@ -313,7 +313,7 @@ function genericAsyncTests(instance: () => Cluster | Scope) {
           results.push(row)
           count++
         }
-      } catch (err: any) {
+      } catch {
         // Do nothing
       }
 

@@ -19,38 +19,41 @@ import { createInstance, Credential } from 'couchbase-operational-insights'
 import { createLogger, transports } from 'winston'
 
 const winstonLogger = createLogger({
-    level: 'debug',
-    transports: [new transports.Console(), new transports.File({filename: 'operational-insights.log'})],
+  level: 'debug',
+  transports: [
+    new transports.Console(),
+    new transports.File({ filename: 'operational-insights.log' }),
+  ],
 })
 
 const couchbaseLogger = {
-    debug: (...args) => winstonLogger.debug(args.map(String).join(' ')),
-    info: (...args) => winstonLogger.info(args.map(String).join(' ')),
-    warn: (...args) => winstonLogger.warn(args.map(String).join(' ')),
-    error: (...args) => winstonLogger.error(args.map(String).join(' ')),
+  debug: (...args) => winstonLogger.debug(args.map(String).join(' ')),
+  info: (...args) => winstonLogger.info(args.map(String).join(' ')),
+  warn: (...args) => winstonLogger.warn(args.map(String).join(' ')),
+  error: (...args) => winstonLogger.error(args.map(String).join(' ')),
 }
 
 async function main() {
-    // Update this to your cluster
-    const clusterConnStr = 'https://--your-instance--'
-    const username = 'username'
-    const password = 'password'
-    // User Input ends here.
+  // Update this to your cluster
+  const clusterConnStr = 'https://--your-instance--'
+  const username = 'username'
+  const password = 'password'
+  // User Input ends here.
 
-    const credential = new Credential(username, password)
-    const cluster = createInstance(clusterConnStr, credential, {
-        logger: couchbaseLogger,
-    })
+  const credential = new Credential(username, password)
+  const cluster = createInstance(clusterConnStr, credential, {
+    logger: couchbaseLogger,
+  })
 
-    // ... Execute operations here
+  // ... Execute operations here
 }
 
 main()
-    .then(() => {
-        console.log('Finished.  Exiting app...')
-    })
-    .catch((err) => {
-        console.log('ERR: ', err)
-        console.log('Exiting app...')
-        process.exit(1)
-    })
+  .then(() => {
+    console.log('Finished.  Exiting app...')
+  })
+  .catch((err) => {
+    console.log('ERR: ', err)
+    console.log('Exiting app...')
+    process.exit(1)
+  })

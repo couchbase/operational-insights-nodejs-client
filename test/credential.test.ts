@@ -72,7 +72,6 @@ describe('#Credential', function () {
         InvalidArgumentError
       )
     })
-
   })
 
   describe('Certificate (mTLS)', function () {
@@ -184,7 +183,6 @@ describe('#Credential', function () {
         InvalidArgumentError
       )
     })
-
   })
 
   describe('Cluster.setCredential', function () {
@@ -400,11 +398,10 @@ describe('#Credential', function () {
     it('credential rotation between retries takes effect on the next retry', async function () {
       this.timeout(10000)
       const seenAuth: string[] = []
-      let cluster: ReturnType<typeof createInstance> | undefined
       const server = http.createServer((req) => {
         seenAuth.push(req.headers.authorization || '')
         if (seenAuth.length === 1) {
-          cluster?.setCredential(new JwtCredential('second.jwt.token'))
+          cluster.setCredential(new JwtCredential('second.jwt.token'))
         }
         req.socket.destroy()
       })
@@ -413,7 +410,7 @@ describe('#Credential', function () {
       )
       const port = (server.address() as AddressInfo).port
 
-      cluster = createInstance(
+      const cluster = createInstance(
         `http://127.0.0.1:${port}`,
         new JwtCredential('first.jwt.token')
       )

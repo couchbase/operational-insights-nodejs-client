@@ -275,11 +275,7 @@ export class Cluster {
       options.timeoutOptions.handleRequestTimeout || 10_000
     this._deserializer = options.deserializer || new JsonDeserializer()
     this._maxRetries = options.maxRetries || 7
-    this._httpClient = new HttpClient(
-      url,
-      credential,
-      options.securityOptions
-    )
+    this._httpClient = new HttpClient(url, credential, options.securityOptions)
   }
 
   /**

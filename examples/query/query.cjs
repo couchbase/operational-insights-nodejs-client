@@ -25,12 +25,16 @@ async function main() {
   // User Input ends here.
 
   const credential = new operationalInsights.Credential(username, password)
-  const cluster = operationalInsights.createInstance(clusterConnStr, credential, {
-    // NOTE:  Only an example on how to use options.  Not a recommendation.
-    timeoutOptions: {
-      queryTimeout: 10000,
-    },
-  })
+  const cluster = operationalInsights.createInstance(
+    clusterConnStr,
+    credential,
+    {
+      // NOTE:  Only an example on how to use options.  Not a recommendation.
+      timeoutOptions: {
+        queryTimeout: 10000,
+      },
+    }
+  )
 
   // Execute a streaming query.
   let qs = 'SELECT * FROM `travel-sample`.inventory.airline LIMIT 10;'

@@ -92,7 +92,9 @@
     "check-types": "npx --yes @arethetypeswrong/cli --pack .",
     "test": "ts-mocha test/*.test.ts",
     "cover": "nyc ts-mocha test/*.test.*",
-    "lint": "eslint ./lib/ --max-warnings=0",
+    "lint": "eslint ./lib/ ./test/ --max-warnings=0",
+    "format": "prettier --write lib test examples",
+    "format:check": "prettier --check lib test examples",
     "check-deps": "ncu"
   },
   "mocha": {

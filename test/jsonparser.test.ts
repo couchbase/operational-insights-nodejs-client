@@ -45,11 +45,16 @@ describe('JsonTokenParserStream', function () {
         resolve({ rows, errorsItems, stack: jsonParser.stack.pop() })
       })
 
-      pipeline(Readable.from([jsonString]), parserStream(), jsonParser, (err) => {
-        if (err) {
-          reject(err)
+      pipeline(
+        Readable.from([jsonString]),
+        parserStream(),
+        jsonParser,
+        (err) => {
+          if (err) {
+            reject(err)
+          }
         }
-      })
+      )
     })
   }
 
@@ -312,8 +317,7 @@ describe('JsonTokenParserStream', function () {
       }
     }
     `
-    const { rows, errorsItems, stack } =
-      await collectRowsAndErrors(warningResponse)
+    const { rows, stack } = await collectRowsAndErrors(warningResponse)
     assert.equal(rows.length, 2)
     assert.deepEqual(rows[0], '{"id":1}')
     assert.deepEqual(rows[1], '{"id":2}')
@@ -336,42 +340,42 @@ describe('JsonTokenParserStream', function () {
   it('should successfully parse a boolean', async function () {
     const data = 'true'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.isTrue(res)
   })
 
   it('should successfully parse null', async function () {
     const data = 'null'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.isNull(res)
   })
 
   it('should successfully parse a simple object', async function () {
     const data = `{"a": 1, "b": 2}`
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, { a: 1, b: 2 })
   })
 
   it('should successfully parse an empty array', async function () {
     const data = '[]'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, [])
   })
 
   it('should successfully parse a simple array', async function () {
     const data = '[1,2,"three"]'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, [1, 2, 'three'])
   })
 
   it('should successfully parse an array of objects', async function () {
     const data = '[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, [
       { id: 1, name: 'Alice' },
       { id: 2, name: 'Bob' },
@@ -381,42 +385,42 @@ describe('JsonTokenParserStream', function () {
   it('should successfully parse an array of mixed types', async function () {
     const data = '[123,"text",true,null,{"key":"value"}]'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, [123, 'text', true, null, { key: 'value' }])
   })
 
   it('should successfully parse an empty object', async function () {
     const data = '{}'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, {})
   })
 
   it('should successfully parse an object', async function () {
     const data = '{"name":"John","age":30,"city":"New York"}'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, { name: 'John', age: 30, city: 'New York' })
   })
 
   it('should successfully parse a nested object', async function () {
     const data = '{"outer":{"inner":{"key":"value"}}}'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, { outer: { inner: { key: 'value' } } })
   })
 
   it('should successfully parse an object with unicode', async function () {
     const data = '{"name":"你好","city":"Denver"}'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, { name: '你好', city: 'Denver' })
   })
 
   it('should successfully parse an object with empty key and value', async function () {
     const data = '{"":""}'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, { '': '' })
   })
 
@@ -425,7 +429,7 @@ describe('JsonTokenParserStream', function () {
       '{"users":[{"id":1,"name":"Alice","roles":["admin","editor"]},' +
       '{"id":2,"name":"Bob","roles":["viewer"]}],"meta":{"count":2,"status":"success"}}'
     const { stack } = await collectRowsAndErrors(data)
-    let res = JSON.parse(stack.value)
+    const res = JSON.parse(stack.value)
     assert.deepEqual(res, {
       users: [
         { id: 1, name: 'Alice', roles: ['admin', 'editor'] },

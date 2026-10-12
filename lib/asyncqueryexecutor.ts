@@ -255,7 +255,10 @@ export class AsyncQueryExecutor extends QueryExecutor {
           CouchbaseLogger.debug(
             `Received startQuery response from ${requestOptions.host}:${requestOptions.port}. statusCode=${res.statusCode} clientContextId=${this._clientContextId}`
           )
-          this._handleJsonResponse(res, resolve, reject, ['requestID', 'handle'])
+          this._handleJsonResponse(res, resolve, reject, [
+            'requestID',
+            'handle',
+          ])
         }
       )
 
