@@ -106,7 +106,6 @@
   },
   "files": [
     "LICENSE",
-    "CONTRIBUTING.md",
     "package.json",
     "README.md",
     "dist/**/*"

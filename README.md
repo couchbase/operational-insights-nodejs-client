@@ -1,6 +1,12 @@
 # Couchbase Node.js Operational Insights Client
 Node.js client for [Couchbase](https://couchbase.com) Operational Insights
 
+# Documentation<a id="documentation"></a>
+
+- [SDK documentation](https://docs.couchbase.com/nodejs-operational-insights-sdk/current/hello-world/overview.html)
+- [API reference](https://docs.couchbase.com/sdk-api/operational-insights-nodejs-client/)
+- [Release notes](https://docs.couchbase.com/nodejs-operational-insights-sdk/current/project-docs/operational-insights-sdk-release-notes.html)
+
 # Installing the SDK<a id="installing-the-sdk"></a>
 
 To install the latest release using npm, run:

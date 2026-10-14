@@ -44,7 +44,7 @@ jobs:
     needs: validate-input
     steps:
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.DEFAULT_NODE }}
       - name: Setup test directory
@@ -57,7 +57,7 @@ jobs:
         env:
           CI_SCRIPTS_URL: "https://raw.githubusercontent.com/couchbaselabs/sdkbuild-jenkinsfiles/master/couchnode"
       - name: Upload test setup
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           retention-days: 1
           name: NCBOI-test-setup
@@ -76,7 +76,7 @@ jobs:
       - name: Install cbdinocluster
         run: |
           mkdir -p "$HOME/bin"
-          wget -nv -O $HOME/bin/cbdinocluster https://github.com/couchbaselabs/cbdinocluster/releases/download/v0.0.113/cbdinocluster-linux-amd64
+          wget -nv -O $HOME/bin/cbdinocluster https://github.com/couchbaselabs/cbdinocluster/releases/download/v0.0.128/cbdinocluster-linux-amd64
           chmod +x $HOME/bin/cbdinocluster
           echo "$HOME/bin" >> $GITHUB_PATH
       - name: Install s3mock
@@ -109,14 +109,14 @@ jobs:
           echo "NCBOIUSER=Administrator" >> "$GITHUB_ENV"
           echo "NCBOIPASS=password" >> "$GITHUB_ENV"
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - name: Confirm Node version
         run: |
           node --version
           node -p "process.arch"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: NCBOI-test-setup
           path: NCBOI
