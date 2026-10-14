@@ -103,12 +103,12 @@ jobs:
     steps:
       - name: Checkout
         if: inputs.sha != ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.sha }}
           fetch-depth: 0
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Confirm Node version
@@ -124,7 +124,7 @@ jobs:
           npm run build-docs
           ls -alh docs
       - name: Upload Node.js API docs as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           retention-days: 1
           name: ncboi-api-docs
@@ -143,10 +143,10 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.sha }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
@@ -185,6 +185,7 @@ jobs:
       && needs.publish-npm.result == 'success'
       && needs.publish-npm.result != 'skipped'
       && inputs.skip_validation == false
+      && inputs.publish_dryrun == false
     uses: ./.github/workflows/verify_release.yml
     with:
       version: ${{ inputs.version }}
@@ -192,32 +193,39 @@ jobs:
 
   publish-api-docs:
     name: Publish SDK API docs
-    needs: [upload-api-docs, tests, output-publish-params, validate-npm]
+    needs: [upload-api-docs, output-publish-params, publish-npm, validate-npm]
     environment: publish
     permissions:
       id-token: write
       contents: read
     if: |
       always()
-      && (needs.tests.result == 'success' || needs.tests.result == 'skipped')
-      && (needs.validate-npm.result == 'success' || needs.validate-npm.result == 'skipped')
+      && needs.upload-api-docs.result == 'success'
       && needs.output-publish-params.result == 'success'
       && needs.output-publish-params.outputs.publish_api_docs == 'true'
+      && (needs.output-publish-params.outputs.publish_npm != 'true'
+          || (needs.publish-npm.result == 'success'
+              && (inputs.skip_validation || inputs.publish_dryrun || needs.validate-npm.result == 'success')))
     runs-on: ubuntu-24.04
     steps:
       - name: Download API docs artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ncboi-api-docs
           path: docs
       - name: Setup AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::786014483886:role/SDK_GHA
           aws-region: us-west-1
       - name: Upload to S3
         run: |
           ls -alh ./docs
-          aws s3 cp ./docs s3://docs.couchbase.com/sdk-api/operational-insights-nodejs-client-$SDK_VERSION/ --recursive --acl public-read
+          S3_CMD="aws s3 cp ./docs s3://docs.couchbase.com/sdk-api/operational-insights-nodejs-client-$SDK_VERSION/ --recursive --acl public-read"
+          if [ "${{ inputs.publish_dryrun }}" = "true" ]; then
+            echo "Dry run set, not uploading API docs. Would run: $S3_CMD"
+          else
+            $S3_CMD
+          fi
         env:
           SDK_VERSION: ${{ inputs.version }}
