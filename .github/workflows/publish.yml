@@ -165,15 +165,14 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Publish to npm
         run: |
-          if [ "${{ inputs.publish_dryrun }}" = "true" ]; then
-            npm publish --access public --dry-run
-          else
-            if [ "${{ inputs.npm_tag }}" != "" ]; then
-              npm publish --access public --tag ${{ inputs.npm_tag }}
-            else
-              npm publish --access public
-            fi
+          PUBLISH_ARGS="--access public"
+          if [ "${{ inputs.npm_tag }}" != "" ]; then
+            PUBLISH_ARGS="$PUBLISH_ARGS --tag ${{ inputs.npm_tag }}"
           fi
+          if [ "${{ inputs.publish_dryrun }}" = "true" ]; then
+            PUBLISH_ARGS="$PUBLISH_ARGS --dry-run"
+          fi
+          npm publish $PUBLISH_ARGS
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
