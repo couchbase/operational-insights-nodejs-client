@@ -79,9 +79,9 @@ jobs:
         run: npm run format:check
       - name: Check deps
         if: inputs.is_release
-        run:
+        run: |
           npm run check-deps
-          npm audit  --omit=dev
+          npm audit --omit=dev
           npm run check-types
 
   package:
